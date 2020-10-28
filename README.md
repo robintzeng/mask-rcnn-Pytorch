@@ -31,6 +31,13 @@ python -m torch.distributed.launch --nproc_per_node=4 --use_env train.py\
 ```Shell
 kill $(ps aux | grep train_coco.py | grep -v grep | awk '{print $2}') 
 ```
+
+## Using torchvision to finetune mask-rcnn
+```
+./download_pedestrian.sh
+python test_pedestrian.py
+```
+
 ## TODO:
 PASCAL data loader <br>
 refine the .sh file in download PASCAL
