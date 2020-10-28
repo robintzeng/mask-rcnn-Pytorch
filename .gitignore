@@ -3,3 +3,4 @@ COCO_2017
 PASCAL
 __pycache__
 para.py
+model_*.pth

@@ -29,7 +29,7 @@ python -m torch.distributed.launch --nproc_per_node=4 --use_env train.py\
 ```
 ## kill the nv zombie threads
 ```Shell
-kill $(ps aux | grep train.py | grep -v grep | awk '{print $2}') 
+kill $(ps aux | grep train_coco.py | grep -v grep | awk '{print $2}') 
 ```
 ## TODO:
 PASCAL data loader <br>

@@ -17,25 +17,22 @@ Also, if you train Keypoint R-CNN, the default hyperparameters are
 Because the number of images is smaller in the person keypoint subset of COCO,
 the number of epochs should be adapted so that we have the same number of iterations.
 """
-import datetime
-import os
 import time
-
-import torch
+import os
+import datetime
 import torch.utils.data
 from torch import nn
 import torchvision
 import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
-import utils.utils as utils
-import utils.transforms as T
-
-
-from utils.coco_utils import get_coco, get_coco_kp
-
-from utils.group_by_aspect_ratio import GroupedBatchSampler, create_aspect_ratio_groups
-from utils.engine import train_one_epoch, evaluate
 from model.modified_mask_rcnn import get_model
+from utils.engine import train_one_epoch, evaluate
+from utils.group_by_aspect_ratio import GroupedBatchSampler, create_aspect_ratio_groups
+from utils.coco_utils import get_coco, get_coco_kp
+import utils.transforms as T
+import utils.utils as utils
+import torch
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 def get_dataset(name, image_set, transform, data_path):
@@ -170,7 +167,7 @@ if __name__ == "__main__":
                         help='images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--epochs', default=26, type=int, metavar='N',
                         help='number of total epochs to run')
-    parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
+    parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
     parser.add_argument('--lr', default=0.02, type=float,
                         help='initial learning rate, 0.02 is the default value for training '
