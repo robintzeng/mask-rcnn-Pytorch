@@ -22,7 +22,8 @@ def get_model(num_classes):
     anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
                                        aspect_ratios=((0.5, 1.0, 2.0),))
 
-    roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=[0],
+    # ["0"] rather than [0]
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=["0"],
                                                     output_size=7,
                                                     sampling_ratio=2)
 

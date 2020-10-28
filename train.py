@@ -100,9 +100,9 @@ def main(args):
         collate_fn=utils.collate_fn)
 
     print("Creating model")
-    # model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes,
-    #                                                          pretrained=args.pretrained)
-    model = get_model(num_classes=num_classes)
+    model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes,
+                                                              pretrained=args.pretrained)
+    #model = get_model(num_classes=num_classes)
     model.to(device)
 
     model_without_ddp = model
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--model', default='maskrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=4, type=int,
+    parser.add_argument('-b', '--batch-size', default=14, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--epochs', default=26, type=int, metavar='N',
                         help='number of total epochs to run')
