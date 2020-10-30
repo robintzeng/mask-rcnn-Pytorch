@@ -4,3 +4,5 @@ PASCAL
 __pycache__
 para.py
 model_*.pth
+env
+Pedestrian
