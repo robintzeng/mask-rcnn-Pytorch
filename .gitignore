@@ -6,3 +6,4 @@ para.py
 model_*.pth
 env
 Pedestrian
+trained_model
