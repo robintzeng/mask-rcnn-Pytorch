@@ -8,16 +8,16 @@ import utils.transforms as T
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
-
+from model.modified_mask_rcnn import get_model
 
 
 class PennFudanDataset(object):
     def __init__(self, root, transforms):
-        self.root = os.path.join("Pedestrian",root)
+        self.root = os.path.join("Pedestrian", root)
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
-        root_ = os.path.join("Pedestrian",root)
+        root_ = os.path.join("Pedestrian", root)
         self.imgs = list(sorted(os.listdir(os.path.join(root_, "PNGImages"))))
         self.masks = list(sorted(os.listdir(os.path.join(root_, "PedMasks"))))
 
@@ -79,31 +79,7 @@ class PennFudanDataset(object):
     def __len__(self):
         return len(self.imgs)
 
-###########################################################################
-
-
-      
-def get_instance_segmentation_model(num_classes):
-    # load an instance segmentation model pre-trained on COCO
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-
-    # get the number of input features for the classifier
-    in_features = model.roi_heads.box_predictor.cls_score.in_features
-    # replace the pre-trained head with a new one
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-
-    # now get the number of input features for the mask classifier
-    in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 256
-    # and replace the mask predictor with a new one
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
-                                                       hidden_layer,
-                                                       num_classes)
-
-    return model
-
-
-###########################################################################
+#######################################################################
 
 
 def get_transform(train):
@@ -117,9 +93,7 @@ def get_transform(train):
     return T.Compose(transforms)
 
 
-
 ###############################################################
-
 # use our dataset and defined transformations
 dataset = PennFudanDataset('PennFudanPed', get_transform(train=True))
 dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
@@ -140,7 +114,6 @@ data_loader_test = torch.utils.data.DataLoader(
     collate_fn=utils.collate_fn)
 
 
-
 #############################################################
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -149,7 +122,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 num_classes = 2
 
 # get the model using our helper function
-model = get_instance_segmentation_model(num_classes)
+model = get_model(num_classes)
 # move model to the right device
 model.to(device)
 
