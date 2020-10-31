@@ -7,3 +7,4 @@ model_*.pth
 env
 Pedestrian
 trained_model
+test_bb.py
