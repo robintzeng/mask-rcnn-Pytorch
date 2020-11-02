@@ -9,15 +9,18 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection import MaskRCNN, FasterRCNN
 import timm
-from model.backbone import TimmToVisionFPN, TimmToVision
+from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 # connect our models here !!
 
 
 def get_model(num_classes):
     # load an instance segmentation model pre-trained on COCO
-    m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
-    backbone = TimmToVision(m)
+    # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
+    # backbone = TimmToVision(m)
+    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    backbone = TimmToVisionFPN(m)
+    #backbone = resnet50_fpn()
     model = MaskRCNN(backbone, num_classes)
     '''
     anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
