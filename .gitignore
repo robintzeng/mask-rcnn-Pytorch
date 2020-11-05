@@ -8,3 +8,5 @@ env
 Pedestrian
 trained_model
 test_bb.py
+*.json
+checkpoint*
