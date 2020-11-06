@@ -7,12 +7,10 @@ from collections import OrderedDict
 from torch import nn
 from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchsummary import summary
+# TODO: Fix the pretrain--> can be used in non strict --> easy
 
-# No yet workable
 
-
-# Trainable issue ?!
-# Too far from the resnet50
 class TimmToVisionFPN(nn.Module):
     def __init__(self, backbone):
         super(TimmToVisionFPN, self).__init__()
@@ -54,18 +52,28 @@ def test():
 
     input = torch.Tensor(2, 3, 832, 928)
 
-    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
-    m = TimmToVisionFPN(m)
-    o = m(input)
+    #n = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    #n = timm.create_model('resnet50', features_only=True, pretrained=True)
 
-    for (k, v) in o.items():
-        print(k, v.shape)
+    # print(m.state_dict().keys())
 
-    m = resnet50_fpn()
+    n = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    m = n.to(device)
+    #summary(m, input_size=(3, 64, 64))
 
-    o = m(input)
-    for (k, v) in o.items():
-        print(k, v.shape)
+    print(n.state_dict().keys())
+    # m = TimmToVisionFPN(m)
+    # o = m(input)
+
+    # for (k, v) in o.items():
+    #     print(k, v.shape)
+
+    # m = resnet50_fpn()
+
+    # o = m(input)
+    # for (k, v) in o.items():
+    #     print(k, v.shape)
 
     # m = torchvision.models.resnet50(pretrained=False)
     # m = TimmToVisionFPN(m)

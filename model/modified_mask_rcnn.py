@@ -18,7 +18,9 @@ def get_model(num_classes):
     # load an instance segmentation model pre-trained on COCO
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m)
-    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    #m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+
+    m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
     #backbone = resnet50_fpn()
     model = MaskRCNN(backbone, num_classes)
