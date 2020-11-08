@@ -1,5 +1,7 @@
 # testing
 from .cspnetECA import*
+from .cspnetCBAM import*
+
 
 
 from .cspnet import *
