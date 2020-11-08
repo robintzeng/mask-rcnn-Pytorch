@@ -167,7 +167,7 @@ class ECABottleneck(nn.Module):
         self.conv1 = ConvBnAct(in_chs, mid_chs, kernel_size=1, **ckwargs)
         self.conv2 = ConvBnAct(mid_chs, mid_chs, kernel_size=3, dilation=dilation, groups=groups, **ckwargs)
         self.conv3 = ConvBnAct(mid_chs, out_chs, kernel_size=1, apply_act=False, **ckwargs)
-        self.attn = create_attn(attn_layer, channels=out_chs)
+        # self.attn = create_attn(attn_layer, channels=out_chs)
         self.act3 = act_layer(inplace=True)
 
     def zero_init_last_bn(self):
@@ -178,7 +178,7 @@ class ECABottleneck(nn.Module):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        x = self.attn(x)
+        #x = self.attn(x)
         x = x + shortcut
         # FIXME partial shortcut needed if first block handled as per original, not used for my current impl
         #x[:, :shortcut.size(1)] += shortcut
