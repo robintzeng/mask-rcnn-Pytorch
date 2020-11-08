@@ -58,9 +58,9 @@ def test():
     # print(m.state_dict().keys())
 
     ## For ECA
-    n = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    # n = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     ## For CBAM (Set the pretrained_strict = false)
-    # n = timm.create_model('CBAMcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    n = timm.create_model('CBAMcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     m = n.to(device)
     # summary(m, input_size=(3, 64, 64))

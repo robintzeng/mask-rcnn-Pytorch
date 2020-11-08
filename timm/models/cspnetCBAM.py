@@ -236,15 +236,12 @@ class CBAMCrossStage(nn.Module):
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.max_pool = nn.AdaptiveAvgPool2d(1)
         ratio = 16
-        # in_planes = 
         self.sharedMLP = nn.Sequential(
-            nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False))
-            # nn.Conv2d(in_planes, in_planes // ratio, 1, bias=False), nn.ReLU(),
-            # nn.Conv2d(in_planes // rotio, in_planes, 1, bias=False))
-
+            nn.Conv2d(out_chs, out_chs // ratio, 1, bias=False), nn.ReLU(),
+            nn.Conv2d(out_chs // ratio, out_chs, 1, bias=False))
         # For Spatial
         padding = 3 if k_size == 7 else 1
-        self.conv = nn.Conv2d(2,1,k_size, padding=padding, bias=False)
+        self.conv = nn.Conv2d(2,1,k_size, padding=(k_size - 1) // 2, bias=False)
 
 
 
@@ -261,19 +258,19 @@ class CBAMCrossStage(nn.Module):
         xb = self.blocks(xb)
         x = self.conv_transition(torch.cat([xs, self.conv_transition_b(xb)], dim=1))
 
+        # Channel
+        avgout = self.sharedMLP(self.avg_pool(x))
+        maxout = self.sharedMLP(self.max_pool(x))
+        y = (avgout + maxout).sigmoid()
+        x = x*y.expand_as(x)
         # Spatial
         x_avg = torch.mean(x, dim=1, keepdim=True)
         x_max = torch.max(x, dim=1, keepdim=True)[0]
         x_attn = torch.cat([x_avg, x_max], dim=1)
         x_attn = self.conv(x_attn)
         y = x_attn.sigmoid()
-        x = x*y.expand_as(x)
-
-        # Channel
-        avgout = self.sharedMLP(self.avg_pool(x))
-        maxout = self.sharedMLP(self.max_pool(x))
-        y = self.sigmoid(avgout + maxout)
         out = x*y.expand_as(x)
+
 
 
         return out
