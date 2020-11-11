@@ -262,14 +262,14 @@ class CBAMCrossStage(nn.Module):
         avgout = self.sharedMLP(self.avg_pool(x))
         maxout = self.sharedMLP(self.max_pool(x))
         y = (avgout + maxout).sigmoid()
-        x = x*y.expand_as(x)
+        x = x*y
         # Spatial
         x_avg = torch.mean(x, dim=1, keepdim=True)
         x_max = torch.max(x, dim=1, keepdim=True)[0]
         x_attn = torch.cat([x_avg, x_max], dim=1)
         x_attn = self.conv(x_attn)
         y = x_attn.sigmoid()
-        out = x*y.expand_as(x)
+        out = x*y
 
 
 
