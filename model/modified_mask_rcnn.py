@@ -8,7 +8,8 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection import MaskRCNN
-
+from .box_head import RoIBoxHead
+from .roi_box_predictor import RoIBoxPredictor
 
 # connect our models here !!
 
@@ -35,7 +36,13 @@ def get_model(num_classes):
     # get the number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    # model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    
+
+    model.roi_heads.box_head = RoIBoxHead(in_features, num_classes)
+    model.roi_heads.box_predictor = RoIBoxPredictor(num_classes, pretrained=False)
+
+    # print(model.roi_heads.box_head, model.roi_heads.box_predictor)
 
     # now get the number of input features for the mask classifier
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
