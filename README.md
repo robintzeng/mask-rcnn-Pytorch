@@ -27,9 +27,10 @@ python test_pedestrian.py
 ```
 
 # Mainly training on PASCAL
+When you want to train on pascal voc.
+you don't need to run the .sh file because it is a built-in function in voc_utils.
 ```
-./mask-rcnn-Pytorch/download_PASCAL.sh
-TODO: !!
+python train_voc.py
 ```
 
 ## Problem shooting
