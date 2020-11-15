@@ -19,6 +19,7 @@ from utils.voc_utils import get_voc
 
 from utils.group_by_aspect_ratio import GroupedBatchSampler, create_aspect_ratio_groups
 from utils.engine_voc import train_one_epoch, voc_evaluate, coco_evaluate
+from model.modified_mask_rcnn import get_model
 
 import utils.utils as utils
 import utils.transforms as T
@@ -83,8 +84,10 @@ def main(args):
         collate_fn=utils.collate_fn)
 
     print("Creating model")
-    model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes,
-                                                              pretrained=args.pretrained)
+    # model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes,
+    #                                                          pretrained=args.pretrained)
+
+    model = get_model(num_classes=num_classes)
     model.to(device)
 
     model_without_ddp = model
@@ -142,12 +145,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__)
 
-    parser.add_argument('--data-path', default='PASCAL/VOCdevkit/VOC2012', help='dataset')
+    parser.add_argument('--data-path', default='PASCAL/', help='dataset')
     parser.add_argument('--dataset', default='voc', help='dataset')
     parser.add_argument('--model', default='fasterrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('-b', '--batch-size', default=2, type=int)
-    parser.add_argument('--epochs', default=13, type=int, metavar='N',
+    parser.add_argument('--epochs', default=10, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                         help='number of data loading workers (default: 16)')
