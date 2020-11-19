@@ -50,22 +50,29 @@ def resnet50_fpn():
     return backbone
 
 
+def calculate_param(model):
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    return pytorch_total_params
+
+
 def test():
 
     input = torch.Tensor(2, 3, 832, 928)
 
     m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
     m = TimmToVisionFPN(m)
-    o = m(input)
 
-    for (k, v) in o.items():
-        print(k, v.shape)
+    print(calculate_param(m))
+    # o = m(input)
 
-    m = resnet50_fpn()
+    # for (k, v) in o.items():
+    #     print(k, v.shape)
 
-    o = m(input)
-    for (k, v) in o.items():
-        print(k, v.shape)
+    # m = resnet50_fpn()
+
+    # o = m(input)
+    # for (k, v) in o.items():
+    #     print(k, v.shape)
 
     # m = torchvision.models.resnet50(pretrained=False)
     # m = TimmToVisionFPN(m)
