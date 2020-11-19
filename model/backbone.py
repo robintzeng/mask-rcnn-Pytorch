@@ -9,6 +9,7 @@ from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastL
 #from timm.models.attFPN import AttFeaturePyramidNetwork, LastLevelMaxPool
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchsummary import summary
+from torchvision.models.detection import MaskRCNN
 # TODO: Fix the pretrain--> can be used in non strict --> easy
 
 
@@ -34,10 +35,10 @@ class TimmToVisionFPN(nn.Module):
 
 
 class TimmToVision(nn.Module):
-    def __init__(self, backbone):
+    def __init__(self, backbone, out_channels):
         super(TimmToVision, self).__init__()
         self.backbone = backbone
-        self.out_channels = 1024
+        self.out_channels = out_channels
 
     def forward(self, x):
         x = self.backbone(x)
@@ -47,6 +48,11 @@ class TimmToVision(nn.Module):
 def resnet50_fpn():
     backbone = backbone_utils.resnet_fpn_backbone('resnet50', True)
     return backbone
+
+
+def calculate_param(model):
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    return pytorch_total_params
 
 
 def test():
@@ -59,8 +65,12 @@ def test():
     # print(m.state_dict().keys())
 
     m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    backbone = TimmToVisionFPN(m)
+    m = MaskRCNN(backbone, 91)
+    print(calculate_param(m))
     #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #m = n.to(device)
+
     #summary(m, input_size=(3, 64, 64))
 
     # print(n.state_dict().keys())
