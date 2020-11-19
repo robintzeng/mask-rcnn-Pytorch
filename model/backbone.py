@@ -35,10 +35,10 @@ class TimmToVisionFPN(nn.Module):
 
 
 class TimmToVision(nn.Module):
-    def __init__(self, backbone):
+    def __init__(self, backbone, out_channels):
         super(TimmToVision, self).__init__()
         self.backbone = backbone
-        self.out_channels = 1024
+        self.out_channels = out_channels
 
     def forward(self, x):
         x = self.backbone(x)
