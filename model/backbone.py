@@ -7,6 +7,7 @@ from collections import OrderedDict
 from torch import nn
 from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models.detection import MaskRCNN
 # from torchsummary import summary
 # TODO: Fix the pretrain--> can be used in non strict --> easy
 
@@ -65,12 +66,12 @@ def test():
     # For ECA
     # n = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     # For CBAM (Set the pretrained_strict = false)
-    n = timm.create_model('CBAMcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    m = timm.create_model('CBAMcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    backbone = TimmToVisionFPN(m)
+    m = MaskRCNN(backbone, 91)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    m = n.to(device)
-    # summary(m, input_size=(3, 64, 64))
-
-    # print(n.state_dict().keys())
+    m = m.to(device)
+    print(calculate_param(m))
 
     # m = TimmToVisionFPN(m)
     # o = m(input)
