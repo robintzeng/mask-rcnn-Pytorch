@@ -8,7 +8,7 @@ from .cond_conv2d import CondConv2d, get_condconv_initializer
 from .config import is_exportable, is_scriptable, is_no_jit, set_exportable, set_scriptable, set_no_jit,\
     set_layer_config
 from .conv2d_same import Conv2dSame
-from .conv_bn_act import ConvBnAct
+from .conv_bn_act import ConvBnAct, AttnConvBnAct
 from .create_act import create_act_layer, get_act_layer, get_act_fn
 from .create_attn import create_attn
 from .create_conv2d import create_conv2d
