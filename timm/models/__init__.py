@@ -1,6 +1,6 @@
 # testing
 from .cspnetECA import*
-
+from .cspnetLA import*
 
 from .cspnet import *
 from .densenet import *

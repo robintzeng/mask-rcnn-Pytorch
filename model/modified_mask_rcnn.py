@@ -20,7 +20,7 @@ def get_model(num_classes):
     # backbone = TimmToVision(m)
     #m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
 
-    m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    m = timm.create_model('LAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
     #backbone = resnet50_fpn()
     model = MaskRCNN(backbone, num_classes)

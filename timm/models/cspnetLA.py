@@ -161,11 +161,12 @@ class LABottleneck(nn.Module):
                  act_layer=nn.ReLU, norm_layer=nn.BatchNorm2d,
                  attn_layer='la', aa_layer=None, drop_block=None, drop_path=None):
         super(LABottleneck, self).__init__()
+        
         mid_chs = int(round(out_chs * bottle_ratio))
         ckwargs = dict(act_layer=act_layer, norm_layer=norm_layer, aa_layer=aa_layer, drop_block=drop_block)
 
         self.conv1 = AttnConvBnAct(in_chs, mid_chs, kernel_size=1, **ckwargs)
-        self.conv2 = AttnConvBnAct(mid_chs, mid_chs, kernel_size=3, dilation=dilation, groups=groups, **ckwargs)
+        self.conv2 = AttnConvBnAct(mid_chs, mid_chs, kernel_size=7, padding=3, groups=8, **ckwargs)
         self.conv3 = AttnConvBnAct(mid_chs, out_chs, kernel_size=1, apply_act=False, **ckwargs)
         # self.attn = create_attn(attn_layer, channels=out_chs)
         self.act3 = act_layer(inplace=True)
@@ -176,12 +177,14 @@ class LABottleneck(nn.Module):
     def forward(self, x):
         shortcut = x
         x = self.conv1(x)
+        # print("XXXXXXXXXXXXXXXXXXX")
+        # print(x.shape)
+        # print("XXXXXXXXXXXXXXXXXXXXxx")
         x = self.conv2(x)
         x = self.conv3(x)
         #x = self.attn(x)
         x = x + shortcut
-        # FIXME partial shortcut needed if first block handled as per original, not used for my current impl
-        #x[:, :shortcut.size(1)] += shortcut
+        
         x = self.act3(x)
         return x
 
