@@ -61,10 +61,10 @@ def create_optimizer(args, model, filter_bias_and_bn=True):
     opt_split = opt_lower.split('_')
     opt_lower = opt_split[-1]
     if opt_lower == 'sgd' or opt_lower == 'nesterov':
-        del opt_args['eps']
+        #del opt_args['eps']
         optimizer = optim.SGD(parameters, momentum=args.momentum, nesterov=True, **opt_args)
     elif opt_lower == 'momentum':
-        del opt_args['eps']
+        #del opt_args['eps']
         optimizer = optim.SGD(parameters, momentum=args.momentum, nesterov=False, **opt_args)
     elif opt_lower == 'adam':
         optimizer = optim.Adam(parameters, **opt_args)
