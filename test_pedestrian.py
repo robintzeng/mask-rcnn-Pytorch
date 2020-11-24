@@ -79,8 +79,6 @@ class PennFudanDataset(object):
     def __len__(self):
         return len(self.imgs)
 
-#######################################################################
-
 
 def get_transform(train):
     transforms = []
