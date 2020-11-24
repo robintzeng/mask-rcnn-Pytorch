@@ -59,7 +59,7 @@ model_cfgs = dict(
         stem=dict(out_chs=64, kernel_size=7, stride=2, pool='max'),
         stage=dict(
             out_chs=(128, 256, 512, 1024),
-            depth=(3, 3, 5, 2),
+            depth=(2, 2, 4, 1),
             stride=(1,) + (2,) * 3,
             exp_ratio=(2.,) * 4,
             bottle_ratio=(0.5,) * 4,
@@ -159,15 +159,14 @@ class LABottleneck(nn.Module):
 
     def __init__(self, in_chs, out_chs, dilation=1, bottle_ratio=0.25, groups=1,
                  act_layer=nn.ReLU, norm_layer=nn.BatchNorm2d,
-                 attn_layer='la', aa_layer=None, drop_block=None, drop_path=None):
+                 attn_layer='eca', aa_layer=None, drop_block=None, drop_path=None):
         super(LABottleneck, self).__init__()
-        
         mid_chs = int(round(out_chs * bottle_ratio))
         ckwargs = dict(act_layer=act_layer, norm_layer=norm_layer, aa_layer=aa_layer, drop_block=drop_block)
 
-        self.conv1 = AttnConvBnAct(in_chs, mid_chs, kernel_size=1, **ckwargs)
-        self.conv2 = AttnConvBnAct(mid_chs, mid_chs, kernel_size=7, padding=3, groups=8, **ckwargs)
-        self.conv3 = AttnConvBnAct(mid_chs, out_chs, kernel_size=1, apply_act=False, **ckwargs)
+        self.conv1 = ConvBnAct(in_chs, mid_chs, kernel_size=1, **ckwargs)
+        self.conv2 = ConvBnAct(mid_chs, mid_chs, kernel_size=3, dilation=dilation, groups=groups, **ckwargs)
+        self.conv3 = ConvBnAct(mid_chs, out_chs, kernel_size=1, apply_act=False, **ckwargs)
         # self.attn = create_attn(attn_layer, channels=out_chs)
         self.act3 = act_layer(inplace=True)
 
@@ -177,14 +176,12 @@ class LABottleneck(nn.Module):
     def forward(self, x):
         shortcut = x
         x = self.conv1(x)
-        # print("XXXXXXXXXXXXXXXXXXX")
-        # print(x.shape)
-        # print("XXXXXXXXXXXXXXXXXXXXxx")
         x = self.conv2(x)
         x = self.conv3(x)
         #x = self.attn(x)
         x = x + shortcut
-        
+        # FIXME partial shortcut needed if first block handled as per original, not used for my current impl
+        #x[:, :shortcut.size(1)] += shortcut
         x = self.act3(x)
         return x
 
@@ -203,7 +200,7 @@ class LACrossStage(nn.Module):
         conv_kwargs = dict(act_layer=block_kwargs.get('act_layer'), norm_layer=block_kwargs.get('norm_layer'))
 
         if stride != 1 or first_dilation != dilation:
-            self.conv_down = AttnConvBnAct(
+            self.conv_down = ConvBnAct(
                 in_chs, down_chs, kernel_size=3, stride=stride, dilation=first_dilation, groups=groups,
                 aa_layer=block_kwargs.get('aa_layer', None), **conv_kwargs)
             prev_chs = down_chs
@@ -214,7 +211,7 @@ class LACrossStage(nn.Module):
         # FIXME this 1x1 expansion is pushed down into the cross and block paths in the darknet cfgs. Also,
         # there is also special case for the first stage for some of the model that results in uneven split
         # across the two paths. I did it this way for simplicity for now.
-        self.conv_exp = AttnConvBnAct(prev_chs, exp_chs, kernel_size=1, apply_act=not cross_linear, **conv_kwargs)
+        self.conv_exp = ConvBnAct(prev_chs, exp_chs, kernel_size=1, apply_act=not cross_linear, **conv_kwargs)
         prev_chs = exp_chs // 2  # output of conv_exp is always split in two
 
         self.blocks = nn.Sequential()
@@ -225,35 +222,29 @@ class LACrossStage(nn.Module):
             prev_chs = block_out_chs
 
         # transition convs
-        self.conv_transition_b = AttnConvBnAct(prev_chs, exp_chs // 2, kernel_size=1, **conv_kwargs)
-        self.conv_transition = AttnConvBnAct(exp_chs, out_chs, kernel_size=1, **conv_kwargs)
+        self.conv_transition_b = ConvBnAct(prev_chs, exp_chs // 2, kernel_size=1, **conv_kwargs)
+        self.conv_transition = ConvBnAct(exp_chs, out_chs, kernel_size=1, **conv_kwargs)
 
-        # attention module
-        gamma = 2
-        b = 1
-        t = int(abs((math.log(exp_chs, 2) + b) / gamma))
-        k_size = t if t % 2 else t + 1
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.conv = nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False)
-        self.sigmoid = nn.Sigmoid()
 
+        self.conv1 = AttnConvBnAct(prev_chs, exp_chs // 2, kernel_size=1)
+        self.conv2 = AttnConvBnAct(exp_chs // 2, exp_chs // 2, kernel_size=7, padding=3, groups=8)
+        
+        self.attn = create_attn("eca", channels=out_chs) 
+    
     def forward(self, x):
         if self.conv_down is not None:
             x = self.conv_down(x)
         x = self.conv_exp(x)
-
-        # attention layer
-        y = self.avg_pool(x)
-        y = self.conv(y.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
-        y = self.sigmoid(y)
-
         xs, xb = x.chunk(2, dim=1)
         xb = self.blocks(xb)
 
-        x = torch.cat([xs, self.conv_transition_b(xb)], dim=1)
-        x = x * y.expand_as(x)
-
-        out = self.conv_transition(x)
+        xs = self.conv1(xs)
+        xs = self.conv2(xs)
+        
+        
+        out = self.conv_transition(torch.cat([xs, self.conv_transition_b(xb)], dim=1))
+        
+        out = self.attn(out)
 
         return out
 
