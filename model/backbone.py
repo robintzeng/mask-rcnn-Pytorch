@@ -59,12 +59,12 @@ def test():
 
     input = torch.Tensor(2, 3, 832, 928)
 
-    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
-    m = TimmToVisionFPN(m)
+    m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
+    #m = TimmToVisionFPN(m)
 
-    print(calculate_param(m))
-    # o = m(input)
-
+    #print(calculate_param(m))
+    o = m(input)
+    print(o.shape)
     # for (k, v) in o.items():
     #     print(k, v.shape)
 

@@ -19,7 +19,7 @@ from utils.voc_utils import get_voc
 
 from utils.group_by_aspect_ratio import GroupedBatchSampler, create_aspect_ratio_groups
 from utils.engine_voc import train_one_epoch, voc_evaluate, coco_evaluate
-from model.modified_mask_rcnn import get_model
+from model.modified_faster_rcnn import get_model
 
 import utils.utils as utils
 import utils.transforms as T
