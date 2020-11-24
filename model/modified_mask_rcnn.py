@@ -7,17 +7,14 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
-<<<<<<< HEAD
 from torchvision.models.detection import MaskRCNN
 from .roi_box_head_predictor import RoIBoxPredictor
 from .roi_box_head_extractor import RoIFeatureExtractor
 
-=======
 from torchvision.models.detection import MaskRCNN, FasterRCNN
 import timm
 from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
->>>>>>> backbone
 # connect our models here !!
 
 
@@ -29,6 +26,10 @@ def get_model(num_classes):
     backbone = TimmToVisionFPN(m)
     #backbone = resnet50_fpn()
     model = MaskRCNN(backbone, num_classes)
+    
+    model.roi_heads.box_head = RoIFeatureExtractor(num_inputs=num_classes)  # 1280
+    model.roi_heads.box_predictor = RoIBoxPredictor(num_classes)
+    
     '''
     anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
                                        aspect_ratios=((0.5, 1.0, 2.0),))

@@ -79,11 +79,8 @@ class PennFudanDataset(object):
     def __len__(self):
         return len(self.imgs)
 
-<<<<<<< HEAD
 #######################################################################
 
-=======
->>>>>>> backbone
 
 def get_transform(train):
     transforms = []
