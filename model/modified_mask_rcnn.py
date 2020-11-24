@@ -7,19 +7,29 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
+<<<<<<< HEAD
 from torchvision.models.detection import MaskRCNN
 from .roi_box_head_predictor import RoIBoxPredictor
 from .roi_box_head_extractor import RoIFeatureExtractor
 
+=======
+from torchvision.models.detection import MaskRCNN, FasterRCNN
+import timm
+from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn
+from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+>>>>>>> backbone
 # connect our models here !!
 
 
 def get_model(num_classes):
     # load an instance segmentation model pre-trained on COCO
-    #model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-    backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-    backbone.out_channels = 1280
-
+    # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
+    # backbone = TimmToVision(m)
+    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    backbone = TimmToVisionFPN(m)
+    #backbone = resnet50_fpn()
+    model = MaskRCNN(backbone, num_classes)
+    '''
     anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
                                        aspect_ratios=((0.5, 1.0, 2.0),))
 
@@ -29,7 +39,7 @@ def get_model(num_classes):
                                                     sampling_ratio=2)
 
     model = MaskRCNN(backbone,
-                     num_classes=2,
+                     num_classes=num_classes,
                      rpn_anchor_generator=anchor_generator,
                      box_roi_pool=roi_pooler)
 
@@ -50,5 +60,5 @@ def get_model(num_classes):
     # and replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask, hidden_layer,
                                                        num_classes)
-
+    '''
     return model

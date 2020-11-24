@@ -6,5 +6,12 @@ para.py
 model_*.pth
 env
 Pedestrian
+<<<<<<< HEAD
 test_bb.py
 trained_model
+=======
+trained_model
+test_bb.py
+*.json
+checkpoint*
+>>>>>>> backbone
