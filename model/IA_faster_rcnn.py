@@ -148,6 +148,14 @@ class FasterRCNN(FasterRCNN):
                  bbox_reg_weights=None):
 
 
+
+        roi_heads = RoIHeads(
+            # Box
+            box_roi_pool, box_head, box_predictor,
+            box_fg_iou_thresh, box_bg_iou_thresh,
+            box_batch_size_per_image, box_positive_fraction,
+            bbox_reg_weights,
+            box_score_thresh, box_nms_thresh, box_detections_per_img)
         
         super(FasterRCNN, self).__init__(backbone, num_classes,
                  # transform parameters
@@ -166,14 +174,6 @@ class FasterRCNN(FasterRCNN):
                  box_fg_iou_thresh, box_bg_iou_thresh,
                  box_batch_size_per_image, box_positive_fraction,
                  bbox_reg_weights)
-
-        roi_heads = RoIHeads(
-            # Box
-            box_roi_pool, box_head, box_predictor,
-            box_fg_iou_thresh, box_bg_iou_thresh,
-            box_batch_size_per_image, box_positive_fraction,
-            bbox_reg_weights,
-            box_score_thresh, box_nms_thresh, box_detections_per_img)
 
 
 
