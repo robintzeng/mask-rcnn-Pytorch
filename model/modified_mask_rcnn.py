@@ -9,6 +9,8 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection import MaskRCNN, FasterRCNN
 
+from .cascade_rpn_head import CascadeRPNHead
+
 
 # connect our models here !!
 
@@ -26,12 +28,16 @@ def get_model(num_classes):
     roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=["0"],
                                                     output_size=7,
                                                     sampling_ratio=2)
-
+    out_channels = backbone.out_channels
+    num_anchors = anchor_generator.num_anchors_per_location()[0]
+    rpn_head = CascadeRPNHead(out_channels, feat_channels=out_channels, num_anchors=num_anchors, stage=2)
+    
     model = FasterRCNN(backbone,
                        num_classes=num_classes,
                        rpn_anchor_generator=anchor_generator,
+                       rpn_head=rpn_head,
                        box_roi_pool=roi_pooler)
-
+    
     # get the number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
