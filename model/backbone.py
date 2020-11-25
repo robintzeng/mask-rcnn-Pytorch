@@ -10,10 +10,7 @@ from torch import nn
 from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 #from timm.models.attFPN import AttFeaturePyramidNetwork, LastLevelMaxPool
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
-<< << << < HEAD
-# from torchsummary import summary
-== == == =
->>>>>> > ECA
+
 # TODO: Fix the pretrain--> can be used in non strict --> easy
 
 
