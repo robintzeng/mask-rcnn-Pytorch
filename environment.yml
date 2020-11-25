@@ -1,15 +1,23 @@
 channels:
   - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
+  - astroid=2.4.2=py37_0
+  - autopep8=1.5.4=py_0
   - blas=1.0=mkl
   - ca-certificates=2020.6.24=0
   - certifi=2020.6.20=py37_0
   - cudatoolkit=10.1.243=h6bb024c_0
+  - cycler=0.10.0=py_2
+  - cython=0.29.21=py37hb892b2f_1
   - freetype=2.10.2=h5ab3b9f_0
   - intel-openmp=2020.1=217
+  - isort=5.6.4=py_0
   - jpeg=9b=h024ee3a_2
+  - kiwisolver=1.2.0=py37h99015e2_1
+  - lazy-object-proxy=1.4.3=py37h7b6447c_0
   - lcms2=2.11=h396b838_0
   - ld_impl_linux-64=2.33.1=h53a641e_7
   - libedit=3.1.20191231=h14c3975_1
@@ -19,6 +27,8 @@ dependencies:
   - libstdcxx-ng=9.1.0=hdf63c60_0
   - libtiff=4.1.0=h2733197_1
   - lz4-c=1.9.2=he6710b0_1
+  - matplotlib-base=3.3.2=py37hc9afd2a_1
+  - mccabe=0.6.1=py37_1
   - mkl=2020.1=217
   - mkl-service=2.3.0=py37he904b0f_0
   - mkl_fft=1.1.0=py37h23d657b_0
@@ -31,15 +41,25 @@ dependencies:
   - openssl=1.1.1g=h7b6447c_0
   - pillow=7.2.0=py37hb39fc2d_0
   - pip=20.2.1=py37_0
+  - pycocotools=2.0.2=py37h8f50634_1
+  - pycodestyle=2.6.0=py_0
+  - pylint=2.6.0=py37_0
+  - pyparsing=2.4.7=pyh9f0ad1d_0
   - python=3.7.7=hcff3b4d_5
+  - python-dateutil=2.8.1=py_0
+  - python_abi=3.7=1_cp37m
   - pytorch=1.6.0=py3.7_cuda10.1.243_cudnn7.6.3_0
   - readline=8.0=h7b6447c_0
   - setuptools=49.2.1=py37_0
   - six=1.15.0=py_0
   - sqlite=3.32.3=h62c20be_0
   - tk=8.6.10=hbc83047_0
+  - toml=0.10.1=py_0
   - torchvision=0.7.0=py37_cu101
+  - tornado=6.0.4=py37h8f50634_2
+  - typed-ast=1.4.1=py37h7b6447c_0
   - wheel=0.34.2=py37_0
+  - wrapt=1.11.2=py37h7b6447c_0
   - xz=5.2.5=h7b6447c_0
   - zlib=1.2.11=h7b6447c_3
   - zstd=1.4.5=h9ceee32_0
