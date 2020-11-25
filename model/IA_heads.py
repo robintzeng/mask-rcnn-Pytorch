@@ -1,3 +1,4 @@
+import torch
 from torchvision.models.detection.roi_heads import RoIHeads
 
 class IA_roi_heads(RoIHeads):
