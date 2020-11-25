@@ -42,10 +42,10 @@ chmod 777 YOUR_SH_FILE_NAME.sh
 ## run distribute
 ```Shell
 python -m torch.distributed.launch --nproc_per_node=4 --use_env train_coco.py
-python -m torch.distributed.launch --nproc_per_node= --use_env train_coco.py\
+python -m torch.distributed.launch --nproc_per_node= --use_env train_coco\
     --dataset coco --model maskrcnn_resnet50_fpn --epochs 26\
     --lr-steps 16 22 --aspect-ratio-group-factor 3
-python -m torch.distributed.launch --nproc_per_node=4 --use_env train_coco.py\
+python -m torch.distributed.launch --nproc_per_node=4 --use_env train_coco\
     --dataset coco --model maskrcnn_resnet50_fpn --epochs 26\
     --lr-steps 16 22 --aspect-ratio-group-factor 3
 ```
