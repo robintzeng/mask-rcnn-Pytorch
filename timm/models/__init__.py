@@ -1,8 +1,7 @@
 # testing
 from .cspnetECA import*
 from .cspnetCBAM import*
-
-
+from .cspnetLA import*
 
 from .cspnet import *
 from .densenet import *

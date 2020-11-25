@@ -68,7 +68,7 @@ def test():
 
     # print(m.state_dict().keys())
 
-    m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    m = timm.create_model('LAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
     m = MaskRCNN(backbone, 91)
     print(calculate_param(m))
