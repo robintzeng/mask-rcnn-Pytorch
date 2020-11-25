@@ -1,5 +1,6 @@
 import torch
 from torchvision.models.detection.roi_heads import RoIHeads
+from torch.autograd import Variable
 
 class IA_roi_heads(RoIHeads):
   def forward(self,
@@ -31,6 +32,8 @@ class IA_roi_heads(RoIHeads):
             labels = None
             regression_targets = None
             matched_idxs = None
+
+       
 
         box_features = self.box_roi_pool(features, proposals, image_shapes)
         ################################################################

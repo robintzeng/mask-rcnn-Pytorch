@@ -1,15 +1,21 @@
+
+from collections import OrderedDict
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops import MultiScaleRoIAlign
+from torchvision.models.detection.mask_rcnn import MaskRCNNHeads,MaskRCNNPredictor
+from .IA_faster_rcnn import FasterRCNNIA
 
-from torchvision.models.detection import MaskRCNN
-from torchvision.models.detection.mask_rcnn import MaskRCNNHeads, MaskRCNNPredictor
-from .IA_heads import IA_roi_heads as RoIHeads
+from collections import OrderedDict
 
-class MaskRCNN(MaskRCNN):
+
+
+class MaskRCNNIA(FasterRCNNIA):
+
     def __init__(self, backbone, num_classes=None,
                  # transform parameters
                  min_size=800, max_size=1333,
@@ -29,7 +35,7 @@ class MaskRCNN(MaskRCNN):
                  bbox_reg_weights=None,
                  # Mask parameters
                  mask_roi_pool=None, mask_head=None, mask_predictor=None):
-                     
+
         assert isinstance(mask_roi_pool, (MultiScaleRoIAlign, type(None)))
 
         if num_classes is not None:
@@ -55,7 +61,7 @@ class MaskRCNN(MaskRCNN):
             mask_predictor = MaskRCNNPredictor(mask_predictor_in_channels,
                                                mask_dim_reduced, num_classes)
 
-        super(MaskRCNN, self).__init__(
+        super(MaskRCNNIA, self).__init__(
             backbone, num_classes,
             # transform parameters
             min_size, max_size,
@@ -73,16 +79,15 @@ class MaskRCNN(MaskRCNN):
             box_fg_iou_thresh, box_bg_iou_thresh,
             box_batch_size_per_image, box_positive_fraction,
             bbox_reg_weights)
-            
-        self.roi_heads = RoIHeads(
-                # Box
-                box_roi_pool, box_head, box_predictor,
-                box_fg_iou_thresh, box_bg_iou_thresh,
-                box_batch_size_per_image, box_positive_fraction,
-                bbox_reg_weights,
-                box_score_thresh, box_nms_thresh, box_detections_per_img)
-            
+
         self.roi_heads.mask_roi_pool = mask_roi_pool
         self.roi_heads.mask_head = mask_head
         self.roi_heads.mask_predictor = mask_predictor
+
+
+
+
+
+
+
 
