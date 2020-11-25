@@ -7,10 +7,14 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.models.detection import MaskRCNN, FasterRCNN
+# from torchvision.models.detection import MaskRCNN, FasterRCNN
 import timm
 from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+
+# from torchvision.models.detection import MaskRCNN#, FasterRCNN
+from .IA_mask_rcnn import MaskRCNN
+
 # connect our models here !!
 
 
@@ -49,3 +53,4 @@ def get_model(num_classes):
                                                        num_classes)
     '''
     return model
+
