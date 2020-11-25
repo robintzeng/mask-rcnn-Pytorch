@@ -104,7 +104,7 @@ dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
 
 # define training and validation data loaders
 data_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=1, shuffle=True, num_workers=4,
+    dataset, batch_size=2, shuffle=True, num_workers=4,
     collate_fn=utils.collate_fn)
 
 data_loader_test = torch.utils.data.DataLoader(
@@ -126,7 +126,7 @@ model.to(device)
 
 # construct an optimizer
 params = [p for p in model.parameters() if p.requires_grad]
-optimizer = torch.optim.SGD(params, lr=0.001,
+optimizer = torch.optim.SGD(params, lr=0.005,
                             momentum=0.9, weight_decay=0.0005)
 
 # and a learning rate scheduler which decreases the learning rate by
