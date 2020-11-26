@@ -225,13 +225,12 @@ class CBAMCrossStage(nn.Module):
         self.conv_transition_b = ConvBnAct(prev_chs, exp_chs // 2, kernel_size=1, **conv_kwargs)
         self.conv_transition = ConvBnAct(exp_chs, out_chs, kernel_size=1, **conv_kwargs)
 
-
         # CBAM
         # For Channel
         gamma = 2
         b = 1
         t = int(abs((math.log(exp_chs, 2) + b) / gamma))
-        k_size = t if t % 2 else t + 1 # Only even nums
+        k_size = t if t % 2 else t + 1  # Only even nums
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.max_pool = nn.AdaptiveAvgPool2d(1)
@@ -241,12 +240,7 @@ class CBAMCrossStage(nn.Module):
             nn.Conv2d(out_chs // ratio, out_chs, 1, bias=False))
         # For Spatial
         padding = 3 if k_size == 7 else 1
-        self.conv = nn.Conv2d(2,1,k_size, padding=(k_size - 1) // 2, bias=False)
-
-
-
-
-
+        self.conv = nn.Conv2d(2, 1, k_size, padding=(k_size - 1) // 2, bias=False)
 
     def forward(self, x):
         if self.conv_down is not None:
@@ -270,8 +264,6 @@ class CBAMCrossStage(nn.Module):
         x_attn = self.conv(x_attn)
         y = x_attn.sigmoid()
         out = x*y
-
-
 
         return out
 
