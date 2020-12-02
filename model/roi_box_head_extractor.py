@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torchvision.models.detection.faster_rcnn import TwoMLPHead
+from torchvision.models.resnet import BasicBlock, Bottleneck
 
 from .non_local import NONLocalBlock2D_Group
 from .non_local import ListModule
@@ -122,7 +124,7 @@ class RoIFeatureExtractor(nn.Module):
         self.cls_num_stack = 0
 
         reg_num_group = 4
-        self.reg_num_stack = 0
+        self.reg_num_stack = 1
 
         nonlocal_use_bn = True
         nonlocal_use_relu = True
@@ -151,24 +153,23 @@ class RoIFeatureExtractor(nn.Module):
 
     def forward(self, x):
         x_conv = x
-        x_fc = x
 
-        identity = x_fc # [512, 1280, 7, 7]
+        identity = x # [N, 1280, 7, 7]
         x_conv = self.nonlocal_conv(x_conv)
         ## shared
         for i in range(self.shared_num_stack):
             x_conv = self.shared_nonlocal[i](x_conv)
 
         ## seperate
-        x_cls = x_conv
+        # x_cls = x_conv
         x_reg = x_conv
-        for i in range(self.cls_num_stack):
-            x_cls = self.cls_nonlocal[i](x_cls)
+        # for i in range(self.cls_num_stack):
+        #     x_cls = self.cls_nonlocal[i](x_cls)
         for i in range(self.reg_num_stack):
             x_reg = self.reg_nonlocal[i](x_reg)
 
-        x_cls = self.avgpool(x_cls)
-        x_cls = x_cls.view(x_cls.size(0), -1)
+        # x_cls = self.avgpool(x_cls)
+        # x_cls = x_cls.view(x_cls.size(0), -1)
         x_reg = self.avgpool(x_reg)
         x_reg = x_reg.view(x_reg.size(0), -1)
 
@@ -178,4 +179,90 @@ class RoIFeatureExtractor(nn.Module):
         identity = F.relu(self.fc6(identity))
         identity = F.relu(self.fc7(identity))
 
-        return tuple((x_cls, x_reg, identity))
+        return tuple((x_reg, identity))
+
+
+
+
+
+
+
+
+class RoIFeatureExtractor_new(nn.Module):
+    def __init__(self, in_features, num_classes, pretrained=False):
+        super(RoIFeatureExtractor_new, self).__init__()
+        self.fc_head = TwoMLPHead(in_channels=1280*7*7, representation_size=in_features)
+        layers = [
+            BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5),
+            BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5),
+            BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5)
+            ]
+        self.conv_head = nn.Sequential(*layers)
+        # self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
+
+
+    def forward(self, features):  # N, 1280, 7, 7
+        print(features.shape)
+        fc_feature = self.fc_head.forward(features)
+        conv_feature = self.conv_head(features)
+        avgPool = nn.AvgPool2d((conv_feature.shape[2], conv_feature.shape[3]))
+        conv_feature = avgPool(conv_feature)
+
+        return (fc_feature, conv_feature)
+
+
+
+
+'''
+**********************************************************************************
+'''
+
+
+
+# class PlainBlock(nn.Module):
+#   def __init__(self, Cin, Cout, downsample=False):
+#     super().__init__()
+#     self.net = nn.Sequential(
+#       nn.BatchNorm2d(Cin),
+#       nn.ReLU(),
+#       nn.Conv2d(Cin, Cout, 3, stride=1+int(downsample), padding=1),
+#       nn.BatchNorm2d(Cout),
+#       nn.ReLU(),
+#       nn.Conv2d(Cout, Cout, 1, padding=1)
+#     )
+
+#   def forward(self, x):
+#     return self.net(x)
+
+
+# class ResidualBlock(nn.Module):
+#   def __init__(self, Cin, Cout, downsample=False):
+#     super().__init__()
+#     self.block = PlainBlock(Cin, Cout, downsample)
+#     if downsample:
+#       self.shortcut = nn.Conv2d(Cin, Cout, 1, stride=2)
+#     else:
+#       self.shortcut = nn.Identity() if Cin == Cout else nn.Conv2d(Cin, Cout, 1)
+
+#   def forward(self, x):
+#     return self.block(x) + self.shortcut(x)
+
+
+# class ResidualBottleneckBlock(nn.Module):
+#   def __init__(self, Cin, Cout, downsample=False):
+#     super().__init__()
+#     self.block = nn.Sequential(
+#       nn.BatchNorm2d(Cin),
+#       nn.ReLU(),
+#       nn.Conv2d(Cin, Cout // 4, 1),
+#       nn.BatchNorm2d(Cout // 4),
+#       nn.ReLU(),
+#       nn.Conv2d(Cout // 4, Cout // 4, 3, padding=1),
+#       nn.BatchNorm2d(Cout // 4),
+#       nn.ReLU(),
+#       nn.Conv2d(Cout // 4, Cout, 1)
+#     )
+#     self.shortcut = nn.Identity() if Cin == Cout else nn.Conv2d(Cin, Cout, 1)
+
+#   def forward(self, x):
+#     return self.block(x) + self.shortcut(x)
