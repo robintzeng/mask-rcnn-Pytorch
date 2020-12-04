@@ -13,27 +13,26 @@ class FPNUpChannels(nn.Module):
         super(FPNUpChannels, self).__init__()
 
         self.relu = nn.ReLU(inplace=True)
-        ## top
+        # top
         self.top = nn.Sequential(
-                     nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
-                     nn.BatchNorm2d(out_channels),
-                   )
-        ## bottom
+            nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(out_channels),
+        )
+        # bottom
         self.bottom = nn.Sequential(
-                        nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1, bias=False),
-                        nn.BatchNorm2d(in_channels),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
-                        nn.BatchNorm2d(out_channels)
-                      )
-
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(in_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(out_channels)
+        )
 
     def forward(self, x):
-        ## top
+        # top
         out = self.top(x)
-        ## bottom
+        # bottom
         out0 = self.bottom(x)
-        ## residual
+        # residual
         out1 = out + out0
         out1 = self.relu(out1)
 
@@ -44,7 +43,7 @@ def group_norm(out_channels, affine=True, divisor=1):
     out_channels = out_channels // divisor
     dim_per_gp = -1 // divisor
     num_groups = 32 // divisor
-    eps = 1e-5 # default: 1e-5
+    eps = 1e-5  # default: 1e-5
     return torch.nn.GroupNorm(
         get_group_gn(out_channels, dim_per_gp, num_groups),
         out_channels,
@@ -81,7 +80,6 @@ def make_fc(dim_in, hidden_dim, use_gn=False):
     return fc
 
 
-
 class RoIFeatureExtractor(nn.Module):
     """
     Heads for FPN for classification
@@ -90,7 +88,6 @@ class RoIFeatureExtractor(nn.Module):
     def __init__(self, num_inputs=1280, resolution=7):
         super(RoIFeatureExtractor, self).__init__()
 
-
         input_size = num_inputs * resolution ** 2
         representation_size = 1024
 
@@ -98,18 +95,18 @@ class RoIFeatureExtractor(nn.Module):
         nonlocal_use_relu = True
         nonlocal_use_softmax = False
         nonlocal_use_ffconv = True
-        nonlocal_use_attention = True
+        nonlocal_use_attention = False
         nonlocal_inter_channels = 512
 
-        ## add conv and pool like faster rcnn
+        # add conv and pool like faster rcnn
         self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
         out_channels = 1024
 
         self.nonlocal_conv = FPNUpChannels(num_inputs, out_channels)
 
-        ## shared non-local
+        # shared non-local
         shared_num_group = 4
-        self.shared_num_stack = 2
+        self.shared_num_stack = 1
         shared_nonlocal = []
         for i in range(self.shared_num_stack):
             shared_nonlocal.append(
@@ -119,7 +116,7 @@ class RoIFeatureExtractor(nn.Module):
                                       use_attention=nonlocal_use_attention))
         self.shared_nonlocal = ListModule(*shared_nonlocal)
 
-        ## seperate group non-local, before fc6 and fc7
+        # seperate group non-local, before fc6 and fc7
         cls_num_group = 4
         self.cls_num_stack = 0
 
@@ -147,20 +144,20 @@ class RoIFeatureExtractor(nn.Module):
                                       use_attention=nonlocal_use_attention))
         self.reg_nonlocal = ListModule(*reg_nonlocal)
 
-        ## mlp
+        # mlp
         self.fc6 = make_fc(input_size, representation_size, use_gn=False)
         self.fc7 = make_fc(representation_size, representation_size, use_gn=False)
 
     def forward(self, x):
         x_conv = x
 
-        identity = x # [N, 1280, 7, 7]
+        identity = x  # [N, 1280, 7, 7]
         x_conv = self.nonlocal_conv(x_conv)
-        ## shared
+        # shared
         for i in range(self.shared_num_stack):
             x_conv = self.shared_nonlocal[i](x_conv)
 
-        ## seperate
+        # seperate
         # x_cls = x_conv
         x_reg = x_conv
         # for i in range(self.cls_num_stack):
@@ -173,19 +170,13 @@ class RoIFeatureExtractor(nn.Module):
         x_reg = self.avgpool(x_reg)
         x_reg = x_reg.view(x_reg.size(0), -1)
 
-        ### MLP
+        # MLP
         identity = identity.view(identity.size(0), -1)
 
         identity = F.relu(self.fc6(identity))
         identity = F.relu(self.fc7(identity))
 
         return tuple((x_reg, identity))
-
-
-
-
-
-
 
 
 class RoIFeatureExtractor_new(nn.Module):
@@ -196,10 +187,9 @@ class RoIFeatureExtractor_new(nn.Module):
             BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5),
             BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5),
             BasicBlock(256*5, 1024*5), Bottleneck(1024*5, 1024*5)
-            ]
+        ]
         self.conv_head = nn.Sequential(*layers)
         # self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
-
 
     def forward(self, features):  # N, 1280, 7, 7
         print(features.shape)
@@ -211,12 +201,9 @@ class RoIFeatureExtractor_new(nn.Module):
         return (fc_feature, conv_feature)
 
 
-
-
 '''
 **********************************************************************************
 '''
-
 
 
 # class PlainBlock(nn.Module):
