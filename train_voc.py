@@ -114,24 +114,29 @@ def main(args):
 
     print("Start training")
     start_time = time.time()
+    best_map = 0
     for epoch in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
         lr_scheduler.step()
-        # if args.output_dir:
-        #     utils.save_on_master({
-        #         'model': model_without_ddp.state_dict(),
-        #         'optimizer': optimizer.state_dict(),
-        #         'lr_scheduler': lr_scheduler.state_dict(),
-        #         'args': args},
-        #         os.path.join(args.output_dir, 'model_{}.pth'.format(epoch)))
+        if args.output_dir:
+            utils.save_on_master({
+                'model': model_without_ddp.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'lr_scheduler': lr_scheduler.state_dict(),
+                'args': args},
+                os.path.join(args.output_dir, 'model_{}.pth'.format(epoch)))
 
         # evaluate after every epoch
         if 'coco' in args.dataset:
             coco_evaluate(model, data_loader_test, device=device)
         elif 'voc' in args.dataset:
-            voc_evaluate(model, data_loader_test, device=device)
+            map = voc_evaluate(model, data_loader_test, device=device)
+            if map > best_map:
+                best_map = map
+            print("Best Mean AP")
+            print(best_map)
         else:
             print(f'No evaluation method available for the dataset {args.dataset}')
 

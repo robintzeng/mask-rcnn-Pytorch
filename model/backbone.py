@@ -1,5 +1,5 @@
 from torchsummary import summary
-from torchvision.models.detection import MaskRCNN
+from torchvision.models.detection import MaskRCNN, FasterRCNN
 import torch
 import timm
 import torchvision
@@ -65,9 +65,9 @@ def test():
 
     # print(m.state_dict().keys())
 
-    m = timm.create_model('LAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    m = timm.create_model('CBAMcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
-    m = MaskRCNN(backbone, 91)
+    m = FasterRCNN(backbone, 20)
     print(calculate_param(m))
     #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #m = n.to(device)
@@ -121,3 +121,7 @@ def test():
     for k, v in fpn_out.items():
         print(k, v.shape)
     '''
+
+
+if __name__ == "__main__":
+    test()
