@@ -105,7 +105,7 @@ class RoIFeatureExtractor(nn.Module):
         self.nonlocal_conv = FPNUpChannels(num_inputs, out_channels)
 
         # shared non-local
-        shared_num_group = 3
+        shared_num_group = 2
         self.shared_num_stack = 1
         shared_nonlocal = []
         for i in range(self.shared_num_stack):
