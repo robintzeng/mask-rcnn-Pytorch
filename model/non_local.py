@@ -130,10 +130,10 @@ class _NonLocalBlockND_Group(nn.Module):
             nn.init.constant_(self.W[0].bias, 0)
 
         if self.use_ffconv:
-            #self.ffconv = FPNFFConv(self.in_channels)
+            self.ffconv = FPNFFConv(self.in_channels)
             layer_args = dict(act_layer=nn.LeakyReLU, norm_layer=nn.BatchNorm2d, aa_layer=None)
-            self.use_ffconv = CrossStage(self.in_channels, self.in_channels,
-                                         stride=1, dilation=0, depth=1, **layer_args)
+            # self.use_ffconv = CrossStage(self.in_channels, self.in_channels,
+            #                              stride=1, dilation=0, depth=1, **layer_args)
 
     def forward(self, x):
         '''

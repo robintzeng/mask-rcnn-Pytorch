@@ -105,7 +105,7 @@ class RoIFeatureExtractor(nn.Module):
         self.nonlocal_conv = FPNUpChannels(num_inputs, out_channels)
 
         # shared non-local
-        shared_num_group = 2
+        shared_num_group = 4
         self.shared_num_stack = 1
         shared_nonlocal = []
         for i in range(self.shared_num_stack):
@@ -149,10 +149,9 @@ class RoIFeatureExtractor(nn.Module):
         self.fc7 = make_fc(representation_size, representation_size, use_gn=False)
 
     def forward(self, x):
-        print(x.shape)
         x_conv = x
 
-        identity = x  # [N, 1280, 7, 7]
+        identity = x  # [512, 256, 7, 7]
         x_conv = self.nonlocal_conv(x_conv)
         # shared
         for i in range(self.shared_num_stack):
