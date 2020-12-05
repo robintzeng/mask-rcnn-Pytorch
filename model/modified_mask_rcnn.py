@@ -29,8 +29,8 @@ def get_model(num_classes):
     model = FasterRCNN(backbone, num_classes)
     # model = MaskRCNN(backbone, num_classes)
 
-    model.box_head = RoIFeatureExtractor(num_inputs=256, resolution=7)
-    model.box_predictor = RoIBoxPredictor(num_classes)
+    model.roi_heads.box_head = RoIFeatureExtractor(num_inputs=256, resolution=7)
+    model.roi_heads.box_predictor = RoIBoxPredictor(num_classes)
 
     return model
 
