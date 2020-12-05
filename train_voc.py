@@ -115,6 +115,7 @@ def main(args):
 
     print("Start training")
     
+    highest_mAP = .0
     start_time = time.time()
     for epoch in range(args.epochs):
         if args.distributed:
@@ -133,13 +134,16 @@ def main(args):
         if 'coco' in args.dataset:
             coco_evaluate(model, data_loader_test, device=device)
         elif 'voc' in args.dataset:
-            voc_evaluate(model, data_loader_test, device=device)
+            mAP = voc_evaluate(model, data_loader_test, device=device)
+            if mAp and mAP > highest_mAP:
+                highest_mAP = mAP
         else:
             print(f'No evaluation method available for the dataset {args.dataset}')
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
+    print("Highest mAP: {}".format(highest_mAP))
 
 
 if __name__ == "__main__":
