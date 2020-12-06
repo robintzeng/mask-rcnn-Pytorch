@@ -117,6 +117,7 @@ def main(args):
         optimizer, milestones=args.lr_steps, gamma=args.lr_gamma)
 
     if args.resume:
+        print("----------------------Resume--------------")
         checkpoint = torch.load(args.resume, map_location='cpu')
         model_without_ddp.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
@@ -163,13 +164,13 @@ if __name__ == "__main__":
     parser.add_argument(
         '--model', default='maskrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=2, type=int,
+    parser.add_argument('-b', '--batch-size', default=4, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--epochs', default=26, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
-    parser.add_argument('--lr', default=0.02, type=float,
+    parser.add_argument('--lr', default=0.002, type=float,
                         help='initial learning rate, 0.02 is the default value for training '
                         'on 8 gpus and 2 images_per_gpu')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',

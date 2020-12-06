@@ -59,7 +59,7 @@ def main(args):
     dataset_test, _ = get_dataset(args.dataset, "val" if args.dataset == 'coco' else 'test',
                                   get_transform(train=False), args.data_path)
 
-    print("Creating data loaders")
+    print("Creating data loaderssss")
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
         test_sampler = torch.utils.data.distributed.DistributedSampler(dataset_test)
@@ -115,6 +115,7 @@ def main(args):
     print("model params", pytorch_total_params)
     print("Start training")
     start_time = time.time()
+    best_map = 0
     for epoch in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -132,7 +133,11 @@ def main(args):
         if 'coco' in args.dataset:
             coco_evaluate(model, data_loader_test, device=device)
         elif 'voc' in args.dataset:
-            voc_evaluate(model, data_loader_test, device=device)
+            map = voc_evaluate(model, data_loader_test, device=device)
+            if map > best_map:
+                best_map = map
+            print("Best Mean AP")
+            print(best_map)
         else:
             print(f'No evaluation method available for the dataset {args.dataset}')
 
@@ -172,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr-steps', default=[8, 11], nargs='+', type=int, help='decrease lr every step-size epochs')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--print-freq', default=20, type=int, help='print frequency')
-    parser.add_argument('--output-dir', default='.', help='path where to save')
+    parser.add_argument('--output-dir', default=".", help='path where to save')
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--aspect-ratio-group-factor', default=0, type=int)
     parser.add_argument(

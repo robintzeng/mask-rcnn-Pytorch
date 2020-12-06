@@ -20,7 +20,8 @@ def get_model(num_classes):
     # load an instance segmentation model pre-trained on COCO
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m)
-    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    # m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m,1024)
@@ -38,7 +39,7 @@ def get_model(num_classes):
     out_channels = backbone.out_channels
     num_anchors = anchor_generator.num_anchors_per_location()[0]
 
-    rpn_head = CascadeRPNHead(out_channels, feat_channels=out_channels, num_anchors=num_anchors, stage=3)
+    rpn_head = CascadeRPNHead(out_channels, feat_channels=out_channels, num_anchors=num_anchors, stage=2)
     
     model = FasterRCNN(backbone,
                        num_classes=num_classes, rpn_head=rpn_head)
