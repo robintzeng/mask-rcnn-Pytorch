@@ -1,4 +1,4 @@
-r"""PyTorch Detection Training.
+"""PyTorch Detection Training.
 To run in a multi-gpu environment, use the distributed launcher::
     python -m torch.distributed.launch --nproc_per_node=$NGPU --use_env \
         train.py ... --world-size $NGPU
@@ -109,9 +109,10 @@ def main(args):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
     if args.test_only:
-        evaluate(model, data_loader_test, device=device)
+        voc_evaluate(model, data_loader_test, device=device)
         return
-
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print("model params", pytorch_total_params)
     print("Start training")
     start_time = time.time()
     for epoch in range(args.epochs):
@@ -119,7 +120,7 @@ def main(args):
             train_sampler.set_epoch(epoch)
         train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
         lr_scheduler.step()
-        if args.output_dir:
+        if args.output_dir and epoch % 9 == 0:
             utils.save_on_master({
                 'model': model_without_ddp.state_dict(),
                 'optimizer': optimizer.state_dict(),
@@ -138,6 +139,13 @@ def main(args):
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
+    if args.output_dir:
+        utils.save_on_master({
+            'model': model_without_ddp.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'lr_scheduler': lr_scheduler.state_dict(),
+            'args': args},
+            os.path.join(args.output_dir, 'model_{}.pth'.format("final")))
 
 
 if __name__ == "__main__":
@@ -149,12 +157,12 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', default='voc', help='dataset')
     parser.add_argument('--model', default='fasterrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=1, type=int)
-    parser.add_argument('--epochs', default=10, type=int, metavar='N',
+    parser.add_argument('-b', '--batch-size', default=2, type=int)
+    parser.add_argument('--epochs', default=20, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
                         help='number of data loading workers (default: 16)')
-    parser.add_argument('--lr', default=0.02, type=float, help='initial learning rate')
+    parser.add_argument('--lr', default=0.008, type=float, help='initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
