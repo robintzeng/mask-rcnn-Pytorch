@@ -19,12 +19,13 @@ def get_model(num_classes):
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m, 1024)
 
-    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
-    backbone = TimmToVisionFPN(m)
+#     m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+#     backbone = TimmToVisionFPN(m)
 
     # FPN official version
     #backbone = resnet50_fpn()
-
+    m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
+    backbone = TimmToVisionFPN(m)
     # ["0"] rather than [0]
     # roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0', '1', '2', '3'],
     #                                                output_size=7,
@@ -35,6 +36,6 @@ def get_model(num_classes):
     return model
 
 
-if __name__ == "__main__":
-    m = get_model(20)
-    print(calculate_param(m))
+# if __name__ == "__main__":
+#     m = get_model(20)
+#     print(calculate_param(m))
