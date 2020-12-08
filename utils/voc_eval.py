@@ -202,7 +202,7 @@ def _write_voc_results_file(all_boxes, image_index, root, classes):
         if cls == '__background__':
             continue
 
-        filename = './tmp/results/det_test_{:s}.txt'.format(cls)
+        filename = '/tmp/results/det_test_{:s}.txt'.format(cls)
         with open(filename, 'wt') as f:
             prev_index = ''
             for im_ind, index in enumerate(new_image_index):

@@ -135,7 +135,7 @@ def main(args):
             coco_evaluate(model, data_loader_test, device=device)
         elif 'voc' in args.dataset:
             mAP = voc_evaluate(model, data_loader_test, device=device)
-            if mAp and mAP > highest_mAP:
+            if mAP and mAP > highest_mAP:
                 highest_mAP = mAP
         else:
             print(f'No evaluation method available for the dataset {args.dataset}')

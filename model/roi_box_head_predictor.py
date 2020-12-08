@@ -4,7 +4,7 @@ from torch import nn
 class RoIBoxPredictor(nn.Module):
     def __init__(self, num_classes):
         super(RoIBoxPredictor, self).__init__()
-        representation_size = 256
+        representation_size = 512
 
         self.cls_score = nn.Linear(representation_size, num_classes)
         num_bbox_reg_classes = num_classes

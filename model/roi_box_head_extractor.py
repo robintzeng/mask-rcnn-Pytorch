@@ -85,7 +85,7 @@ class RoIFeatureExtractor(nn.Module):
     Heads for FPN for classification
     """
 
-    def __init__(self, num_inputs=1024, resolution=7):
+    def __init__(self, num_inputs=256, resolution=7):
         super(RoIFeatureExtractor, self).__init__()
 
         input_size = num_inputs * resolution ** 2
@@ -100,13 +100,13 @@ class RoIFeatureExtractor(nn.Module):
 
         # add conv and pool like faster rcnn
         self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
-        out_channels = 256
+        out_channels = 512
 
         self.nonlocal_conv = FPNUpChannels(num_inputs, out_channels)
 
         # shared non-local
         shared_num_group = 4
-        self.shared_num_stack = 1
+        self.shared_num_stack = 2
         shared_nonlocal = []
         for i in range(self.shared_num_stack):
             shared_nonlocal.append(
@@ -118,7 +118,7 @@ class RoIFeatureExtractor(nn.Module):
 
         # seperate group non-local, before fc6 and fc7
         cls_num_group = 4
-        self.cls_num_stack = 0
+        self.cls_num_stack = 2
 
         reg_num_group = 4
         self.reg_num_stack = 2

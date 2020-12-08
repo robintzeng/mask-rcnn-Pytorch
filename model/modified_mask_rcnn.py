@@ -11,6 +11,7 @@ from torchvision.models.detection import MaskRCNN, FasterRCNN
 import timm
 from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn, calculate_param
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.ops import MultiScaleRoIAlign
 
 from model.roi_box_head_extractor import RoIFeatureExtractor, RoIFeatureExtractor_new
 from model.roi_box_head_predictor import RoIBoxPredictor
@@ -29,6 +30,7 @@ def get_model(num_classes):
     model = FasterRCNN(backbone, num_classes)
     # model = MaskRCNN(backbone, num_classes)
 
+    # model.roi_heads.box_roi_pool = MultiScaleRoIAlign(featmap_names=['0', '1', '2', '3'], output_size=5, sampling_ratio=2)
     model.roi_heads.box_head = RoIFeatureExtractor(num_inputs=256, resolution=7)
     model.roi_heads.box_predictor = RoIBoxPredictor(num_classes)
 
