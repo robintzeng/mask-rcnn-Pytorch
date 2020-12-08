@@ -89,54 +89,43 @@ class RoIFeatureExtractor(nn.Module):
         super(RoIFeatureExtractor, self).__init__()
 
         input_size = num_inputs * resolution ** 2
-        representation_size = 256
+        representation_size = 1024
 
         nonlocal_use_bn = True
         nonlocal_use_relu = True
-        nonlocal_use_softmax = False
+        nonlocal_use_softmax = True
         nonlocal_use_ffconv = True
-        nonlocal_use_attention = False
-        nonlocal_inter_channels = 256
+        nonlocal_use_attention = True
+        nonlocal_inter_channels = 512
 
         # add conv and pool like faster rcnn
         self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
-        out_channels = 512
+        out_channels = 1024
 
-        self.nonlocal_conv = FPNUpChannels(num_inputs, out_channels)
+        self.res_conv = FPNUpChannels(num_inputs, out_channels)
 
         # shared non-local
-        shared_num_group = 4
-        self.shared_num_stack = 2
-        shared_nonlocal = []
-        for i in range(self.shared_num_stack):
-            shared_nonlocal.append(
-                NONLocalBlock2D_Group(out_channels, num_group=shared_num_group, inter_channels=nonlocal_inter_channels,
-                                      sub_sample=False, bn_layer=nonlocal_use_bn, relu_layer=nonlocal_use_relu,
-                                      use_softmax=nonlocal_use_softmax, use_ffconv=nonlocal_use_ffconv,
-                                      use_attention=nonlocal_use_attention))
-        self.shared_nonlocal = ListModule(*shared_nonlocal)
-
-        # seperate group non-local, before fc6 and fc7
-        cls_num_group = 4
-        self.cls_num_stack = 2
-
         reg_num_group = 4
-        self.reg_num_stack = 2
+        self.reg_num_stack = 3
 
         nonlocal_use_bn = True
         nonlocal_use_relu = True
 
-        cls_nonlocal = []
-        for i in range(self.cls_num_stack):
-            cls_nonlocal.append(
-                NONLocalBlock2D_Group(out_channels, num_group=cls_num_group, inter_channels=nonlocal_inter_channels,
+        reg_conv = []
+        for i in range(self.reg_num_stack):
+            reg_conv.append(
+                NONLocalBlock2D_Group(out_channels, num_group=reg_num_group, inter_channels=nonlocal_inter_channels,
                                       sub_sample=False, bn_layer=nonlocal_use_bn, relu_layer=nonlocal_use_relu,
                                       use_softmax=nonlocal_use_softmax, use_ffconv=nonlocal_use_ffconv,
-                                      use_attention=nonlocal_use_attention))
-        self.cls_nonlocal = ListModule(*cls_nonlocal)
+                                      use_attention=False))
+        self.reg_conv = ListModule(*reg_conv)
 
+
+
+        reg_nonlocal_num_group = 4
+        self.reg_nonlocal_num_stack = 2
         reg_nonlocal = []
-        for i in range(self.reg_num_stack):
+        for i in range(self.reg_nonlocal_num_stack):
             reg_nonlocal.append(
                 NONLocalBlock2D_Group(out_channels, num_group=reg_num_group, inter_channels=nonlocal_inter_channels,
                                       sub_sample=False, bn_layer=nonlocal_use_bn, relu_layer=nonlocal_use_relu,
@@ -148,35 +137,26 @@ class RoIFeatureExtractor(nn.Module):
         self.fc6 = make_fc(input_size, representation_size, use_gn=False)
         self.fc7 = make_fc(representation_size, representation_size, use_gn=False)
 
-    def forward(self, x):
-        x_conv = x
+    def forward(self, x): # [512, 256, 7, 7]
+        x_reg = x
+        x_cls = x
 
-        identity = x  # [512, 256, 7, 7]
-        x_conv = self.nonlocal_conv(x_conv)
-        # shared
-        for i in range(self.shared_num_stack):
-            x_conv = self.shared_nonlocal[i](x_conv)
-
-        # seperate
-        # x_cls = x_conv
-        x_reg = x_conv
-        # for i in range(self.cls_num_stack):
-        #     x_cls = self.cls_nonlocal[i](x_cls)
+        x_reg = self.res_conv(x_reg)
         for i in range(self.reg_num_stack):
+            x_reg = self.reg_conv[i](x_reg)
+        for i in range(self.reg_nonlocal_num_stack):
             x_reg = self.reg_nonlocal[i](x_reg)
 
-        # x_cls = self.avgpool(x_cls)
-        # x_cls = x_cls.view(x_cls.size(0), -1)
         x_reg = self.avgpool(x_reg)
         x_reg = x_reg.view(x_reg.size(0), -1)
 
         # MLP
-        identity = identity.view(identity.size(0), -1)
+        x_cls = x_cls.view(x_cls.size(0), -1)
 
-        identity = F.relu(self.fc6(identity))
-        identity = F.relu(self.fc7(identity))
+        x_cls = F.relu(self.fc6(x_cls))
+        x_cls = F.relu(self.fc7(x_cls))
 
-        return tuple((x_reg, identity))
+        return tuple((x_reg, x_cls))
 
 
 class RoIFeatureExtractor_new(nn.Module):
