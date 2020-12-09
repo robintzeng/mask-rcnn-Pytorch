@@ -6,6 +6,8 @@ para.py
 model_*.pth
 env
 Pedestrian
+test_bb.py
+trained_model
 trained_model
 test_bb.py
 *.json

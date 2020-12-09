@@ -11,9 +11,14 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection import MaskRCNN, FasterRCNN
 
 import timm
-from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn
+from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn, calculate_param
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from .cascade_rpn_head import CascadeRPNHead
+from torchvision.ops import MultiScaleRoIAlign
+
+from model.roi_box_head_extractor import RoIFeatureExtractor, RoIFeatureExtractor_new
+from model.roi_box_head_predictor import RoIBoxPredictor
+# connect our models here !!
 
 from .IA_faster_rcnn import FasterRCNNIA
 # connect our models here !!
@@ -44,11 +49,19 @@ def get_model(num_classes):
 
     rpn_head = CascadeRPNHead(out_channels, feat_channels=out_channels, num_anchors=num_anchors, stage=2)
     
-    # model = FasterRCNN(backbone,
-    #                    num_classes=num_classes, rpn_head=rpn_head)
-    # model = FasterRCNN(backbone, num_classes=num_classes)
+    # model = FasterRCNN(backbone, num_classes=num_classes, rpn_head=rpn_head)
+    model = FasterRCNN(backbone, num_classes=num_classes)
 
     # IA branch
-    model = FasterRCNNIA(backbone, num_classes=num_classes, rpn_head=rpn_head)
+    # model = FasterRCNNIA(backbone, num_classes=num_classes, rpn_head=rpn_head)
+
+    # Box head
+    model.roi_heads.box_head = RoIFeatureExtractor(num_inputs=256, resolution=7)
+    model.roi_heads.box_predictor = RoIBoxPredictor(num_classes)
 
     return model
+
+
+if __name__ == "__main__":
+    m = get_model(21)
+    print(calculate_param(m))
