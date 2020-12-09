@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from timm.models.cspnet import CrossStage
 
 
 class ListModule(nn.Module):
@@ -26,7 +27,6 @@ class ListModule(nn.Module):
         return len(self._modules)
 
 
-
 class FPNFFConv(nn.Module):
     def __init__(self, in_channels):
         super(FPNFFConv, self).__init__()
@@ -35,33 +35,33 @@ class FPNFFConv(nn.Module):
         out_channels = in_channels
 
         self.relu = nn.ReLU(inplace=True)
-        ## top
+        # top
         self.bottleneck = nn.Sequential(
-                             nn.Conv2d(in_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=False),
-                             nn.BatchNorm2d(inter_channels),
-                             nn.ReLU(inplace=True),
-                             nn.Conv2d(inter_channels, inter_channels, kernel_size=3, stride=1, padding=1, bias=False),
-                             nn.BatchNorm2d(inter_channels),
-                             nn.ReLU(inplace=True),
-                             nn.Conv2d(inter_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
-                             nn.BatchNorm2d(out_channels)
-          )
-
+            nn.Conv2d(in_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(inter_channels, inter_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(inter_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(out_channels)
+        )
 
     def forward(self, x):
         identity = x
-        ## bottom
+        # bottom
         out = self.bottleneck(x)
-        ## residual
+        # residual
         out1 = out + identity
         out1 = self.relu(out1)
 
         return out1
 
 
-### group non local
+# group non local
 class _NonLocalBlockND_Group(nn.Module):
-    def __init__(self, in_channels, num_group, inter_channels=None, dimension=3, sub_sample=True, bn_layer=True, relu_layer=True, use_softmax=True, use_ffconv=True, use_attention=True):
+    def __init__(self, in_channels, num_group, inter_channels=None, dimension=3, sub_sample=True, bn_layer=True,
+                 relu_layer=True, use_softmax=True, use_ffconv=True, use_attention=True):
         super(_NonLocalBlockND_Group, self).__init__()
 
         assert dimension in [1, 2, 3]
@@ -80,7 +80,7 @@ class _NonLocalBlockND_Group(nn.Module):
             if self.inter_channels == 0:
                 self.inter_channels = 1
 
-        ## inner channels are divided by num of groups
+        # inner channels are divided by num of groups
         conv_nd = nn.Conv2d
         max_pool_layer = nn.MaxPool2d(kernel_size=(2, 2))
         bn = nn.BatchNorm2d
@@ -95,13 +95,12 @@ class _NonLocalBlockND_Group(nn.Module):
 
         if self.use_softmax:
             self.softmax = nn.Softmax(dim=2)
-     
 
         assert self.num_group <= self.inter_channels
 
         if self.use_attention:
             self.inter_channels_group = self.inter_channels // self.num_group
-            print (self.inter_channels_group)
+            # print (self.inter_channels_group)
 
             self.g = conv_nd(in_channels=self.in_channels, out_channels=self.inter_channels,
                              kernel_size=1, stride=1, padding=0)
@@ -112,31 +111,29 @@ class _NonLocalBlockND_Group(nn.Module):
             self.phi = conv_nd(in_channels=self.in_channels, out_channels=self.inter_channels,
                                kernel_size=1, stride=1, padding=0)
 
-            assert sub_sample==False
+            assert sub_sample == False
             if sub_sample:
                 self.g = nn.Sequential(self.g, max_pool_layer)
                 self.phi = nn.Sequential(self.phi, max_pool_layer)
 
-
             self.W = nn.Sequential(conv_nd(in_channels=self.inter_channels, out_channels=self.in_channels,
-                             kernel_size=1, stride=1, padding=0))
+                                           kernel_size=1, stride=1, padding=0))
 
-            ## BN first then RELU
+            # BN first then RELU
             if bn_layer:
                 self.W.add_module(
                     'bn', bn(self.in_channels)
                 )
 
-
-            ## init the weights
+            # init the weights
             nn.init.constant_(self.W[0].weight, 0)
             nn.init.constant_(self.W[0].bias, 0)
 
-
         if self.use_ffconv:
             self.ffconv = FPNFFConv(self.in_channels)
-
-
+            layer_args = dict(act_layer=nn.LeakyReLU, norm_layer=nn.BatchNorm2d, aa_layer=None)
+            # self.use_ffconv = CrossStage(self.in_channels, self.in_channels,
+            #                              stride=1, dilation=0, depth=1, **layer_args)
 
     def forward(self, x):
         '''
@@ -166,9 +163,9 @@ class _NonLocalBlockND_Group(nn.Module):
 
                 yy = yy.view(batch_size, self.inter_channels, *x.size()[2:])
                 W_y = self.W(yy)
-            else:    
+            else:
                 g_xs = torch.split(g_x, self.inter_channels_group, dim=2)
-                theta_xs = torch.split(theta_x, self.inter_channels_group, dim=2) 
+                theta_xs = torch.split(theta_x, self.inter_channels_group, dim=2)
                 phi_xs = torch.split(phi_x, self.inter_channels_group, dim=1)
                 y_group = []
                 for gx, tx, px in zip(g_xs, theta_xs, phi_xs):
@@ -190,13 +187,13 @@ class _NonLocalBlockND_Group(nn.Module):
 
             z = W_y + x
 
-            ## relu after residual
+            # relu after residual
             if self.relu_layer:
                 z = self.relu(z)
         else:
             z = x
 
-        ## add ffconv
+        # add ffconv
         if self.use_ffconv:
             zz = self.ffconv(z)
         else:
@@ -206,15 +203,17 @@ class _NonLocalBlockND_Group(nn.Module):
 
 
 class NONLocalBlock2D_Group(_NonLocalBlockND_Group):
-    def __init__(self, in_channels, num_group=1, inter_channels=None, sub_sample=True, bn_layer=True, relu_layer=True, use_softmax=True, use_ffconv=True, use_attention=True):
-        super(NONLocalBlock2D_Group, self).__init__(in_channels,
-                                              num_group=num_group,
-                                              inter_channels=inter_channels,
-                                              dimension=2, sub_sample=sub_sample,
-                                              bn_layer=bn_layer, relu_layer=relu_layer, use_softmax=use_softmax, use_ffconv=use_ffconv, use_attention=use_attention)
+    def __init__(
+            self, in_channels, num_group=1, inter_channels=None, sub_sample=True, bn_layer=True, relu_layer=True,
+            use_softmax=True, use_ffconv=True, use_attention=True):
+        super(
+            NONLocalBlock2D_Group, self).__init__(
+            in_channels, num_group=num_group, inter_channels=inter_channels, dimension=2, sub_sample=sub_sample,
+            bn_layer=bn_layer, relu_layer=relu_layer, use_softmax=use_softmax, use_ffconv=use_ffconv,
+            use_attention=use_attention)
 
 
-## original non local
+# original non local
 class _NonLocalBlockND(nn.Module):
     def __init__(self, in_channels, inter_channels=None, dimension=3, sub_sample=True, bn_layer=True):
         super(_NonLocalBlockND, self).__init__()
@@ -297,49 +296,3 @@ class _NonLocalBlockND(nn.Module):
         z = W_y + x
 
         return z
-
-
-class NONLocalBlock1D(_NonLocalBlockND):
-    def __init__(self, in_channels, inter_channels=None, sub_sample=True, bn_layer=True):
-        super(NONLocalBlock1D, self).__init__(in_channels,
-                                              inter_channels=inter_channels,
-                                              dimension=1, sub_sample=sub_sample,
-                                              bn_layer=bn_layer)
-
-
-class NONLocalBlock2D(_NonLocalBlockND):
-    def __init__(self, in_channels, inter_channels=None, sub_sample=True, bn_layer=True):
-        super(NONLocalBlock2D, self).__init__(in_channels,
-                                              inter_channels=inter_channels,
-                                              dimension=2, sub_sample=sub_sample,
-                                              bn_layer=bn_layer)
-
-
-class NONLocalBlock3D(_NonLocalBlockND):
-    def __init__(self, in_channels, inter_channels=None, sub_sample=True, bn_layer=True):
-        super(NONLocalBlock3D, self).__init__(in_channels,
-                                              inter_channels=inter_channels,
-                                              dimension=3, sub_sample=sub_sample,
-                                              bn_layer=bn_layer)
-
-
-if __name__ == '__main__':
-    import torch
-
-    for (sub_sample, bn_layer) in [(True, True), (False, False), (True, False), (False, True)]:
-        img = torch.zeros(2, 3, 20)
-        net = NONLocalBlock1D(3, sub_sample=sub_sample, bn_layer=bn_layer)
-        out = net(img)
-        print(out.size())
-
-        img = torch.zeros(2, 3, 20, 20)
-        net = NONLocalBlock2D(3, sub_sample=sub_sample, bn_layer=bn_layer)
-        out = net(img)
-        print(out.size())
-
-        img = torch.randn(2, 3, 8, 20, 20)
-        net = NONLocalBlock3D(3, sub_sample=sub_sample, bn_layer=bn_layer)
-        out = net(img)
-        print(out.size())
-
-

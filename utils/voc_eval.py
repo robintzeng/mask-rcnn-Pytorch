@@ -238,3 +238,5 @@ def _do_python_eval(data_loader):
                                  ovthresh=0.5, use_07_metric=True)
         aps += [ap]
     print('Mean AP = {:.4f}        '.format(np.mean(aps)))
+
+    return np.mean(aps)

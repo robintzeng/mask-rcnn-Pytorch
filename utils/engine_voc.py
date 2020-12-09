@@ -100,8 +100,13 @@ def voc_evaluate(model, data_loader, device):
 
         _write_voc_results_file(all_boxes, image_index, data_loader.dataset.root,
                                 data_loader.dataset._transforms.transforms[0].CLASSES)
-        _do_python_eval(data_loader)
+        mAP = _do_python_eval(data_loader)
     torch.set_num_threads(n_threads)
+
+    if utils.is_main_process():
+        return mAP
+    else:
+        return None
 
 
 def _get_iou_types(model):

@@ -26,17 +26,15 @@ class RoIBoxPredictor(nn.Module):
         for l in [self.cls_score_fc, self.bbox_pred_fc]:
             nn.init.constant_(l.bias, 0)
 
-    def forward(self, x):  # (x_cls, x_reg, identity)
+    def forward(self, x):  # (x_reg, identity)
         ## conv cls
         # scores = self.cls_score(x[0])
         ## conv reg
-        bbox_deltas = self.bbox_pred(x[1])
+        bbox_deltas = self.bbox_pred(x[0])
 
-        x_fc_cls = x[2]
-        x_fc_reg = x[2]
-        ## fc cls
+        x_fc_cls = x[1]
+        # x_fc_reg = x[2]
         scores_fc = self.cls_score_fc(x_fc_cls)
-        ## fc reg
         # bbox_deltas_fc = self.bbox_pred_fc(x_fc_reg)
 
         # return scores, bbox_deltas, scores_fc, bbox_deltas_fc
