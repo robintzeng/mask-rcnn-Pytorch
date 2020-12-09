@@ -13,6 +13,9 @@ from torch import nn
 import torchvision
 import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
+from thop import profile
+from thop import clever_format
+from fvcore.nn.flop_count import flop_count
 
 from utils.coco_utils import get_coco, get_coco_kp
 from utils.voc_utils import get_voc
@@ -113,6 +116,12 @@ def main(args):
         return
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("model params", pytorch_total_params)
+    temp = torch.randn(1, 3, 500, 353, device='cuda')
+    model.eval()
+    macs, params = flop_count(model, (temp, ))
+    # macs, params = clever_format([macs, params], "%.3f")
+    print("macs", macs.items())
+    # print("macs", params.items())
     print("Start training")
     start_time = time.time()
     best_map = 0
@@ -162,7 +171,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', default='voc', help='dataset')
     parser.add_argument('--model', default='fasterrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=2, type=int)
+    parser.add_argument('-b', '--batch-size', default=1, type=int)
     parser.add_argument('--epochs', default=20, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',

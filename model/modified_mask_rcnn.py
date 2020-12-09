@@ -24,7 +24,7 @@ def get_model(num_classes):
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m)
     # m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
-    m = timm.create_model('ECAcspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
+    m = timm.create_model('cspresnet50', features_only=True, pretrained=True, pretrained_strict=False)
     backbone = TimmToVisionFPN(m)
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m,1024)
@@ -46,8 +46,9 @@ def get_model(num_classes):
     
     # model = FasterRCNN(backbone,
     #                    num_classes=num_classes, rpn_head=rpn_head)
+    # model = FasterRCNN(backbone, num_classes=num_classes)
 
     # IA branch
-    model = FasterRCNNIA(backbone, num_classes=num_classes)
+    model = FasterRCNNIA(backbone, num_classes=num_classes, rpn_head=rpn_head)
 
     return model
