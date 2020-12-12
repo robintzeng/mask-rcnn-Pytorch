@@ -3,14 +3,13 @@ import numpy as np
 import torch
 import torch.utils.data
 from PIL import Image
+import timm
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
 from .IA_faster_rcnn import FasterRCNNIA
-import timm
 from model.backbone import TimmToVisionFPN, TimmToVision, resnet50_fpn, calculate_param
-# connect our models here !!
 
 
 def get_model(num_classes):
@@ -19,11 +18,7 @@ def get_model(num_classes):
     # m = timm.create_model('cspresnet50', pretrained=True, num_classes=0, global_pool='')
     # backbone = TimmToVision(m, 1024)
 
-#     m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
-#     backbone = TimmToVisionFPN(m)
-
-    # FPN official version
-    #backbone = resnet50_fpn()
+    # with FPN
     m = timm.create_model('cspresnet50', features_only=True, pretrained=True)
     backbone = TimmToVisionFPN(m)
     # ["0"] rather than [0]
@@ -31,11 +26,9 @@ def get_model(num_classes):
     #                                                output_size=7,
     #                                                sampling_ratio=2)
 
+    ## Faster RCNN with inverted attention module
     model = FasterRCNNIA(backbone, num_classes=num_classes)
 
     return model
 
 
-# if __name__ == "__main__":
-#     m = get_model(20)
-#     print(calculate_param(m))
